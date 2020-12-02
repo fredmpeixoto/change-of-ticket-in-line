@@ -1,6 +1,6 @@
 var ticketValue = 25;
 
-var linePayment = [25, 25, 50, 100];
+var linePayment = [25, 25, 25, 50, 25, 50, 50, 25, 25, 50, 225];
 
 var pocket = [];
 
@@ -11,14 +11,11 @@ for (let index = 0; index < linePayment.length; index++) {
 
     let isNeededChange = payment > ticketValue;
 
-    if (isNeededChange) {
+    if (isNeededChange)
         thereIsChange = checkThereIsChange(payment);
-        console.log(payment, 'thereIsChange', thereIsChange);
-    }
-    else {
-        //console.log("is some value, Don´t need change");
+    else
         thereIsChange = true;
-    }
+
 
     if (!thereIsChange) {
         console.log(pocket, "Pocket is empty for it payment!");
@@ -30,44 +27,55 @@ for (let index = 0; index < linePayment.length; index++) {
 
 }
 
-console.log("thereIsChange", thereIsChange);
-console.log("pocket", pocket);
+console.log("pocket", pocket, "total pocket", totalPocket());
 
 function checkThereIsChange(payment) {
+
     let changeNecessary = payment - ticketValue;
 
-    let howMuchAtPocket = pocket.reduce((accumulator, payment) => accumulator += payment, 0);
+    return (totalPocket() >= changeNecessary) ? thereIsBill(changeNecessary) : false;
+}
 
-    return (howMuchAtPocket >= changeNecessary) ? thereIsBill(changeNecessary) : false;
+function totalPocket() {
+    return pocket.reduce((accumulator, payment) => accumulator += payment, 0);
 }
 
 function thereIsBill(changeNecessary) {
-    let wasChangeOk = false;
-    console.log('changeNecessary', changeNecessary);
-    console.log('pocket now', pocket);
-    if (changeNecessary >= 50)
-        changeNecessary = removeFromPocket(changeNecessary, 50);
-    else if (changeNecessary == 25)
+
+    let notaVinteCinco = changeNecessary % 50;
+
+    if (notaVinteCinco === 25 && !thereIsNotCoin(25))
         changeNecessary = removeFromPocket(changeNecessary, 25);
 
-    if (changeNecessary === 0) {
-        wasChangeOk = true;
-    }
-    else if (pocket.length === 0)
-        wasChangeOk = false;
-    else{
-        thereIsBill(changeNecessary);
-        break;
-    }
+    changeNecessary = getBillsFifty(changeNecessary);
 
-    return wasChangeOk;
+    return (changeNecessary === 0);
+}
+
+
+function getBillsFifty(changeNecessary) {
+    let notaCinquenta = changeNecessary / 50;
+    if (notaCinquenta > 0) {
+        do {
+            changeNecessary = removeFromPocket(changeNecessary, 50);
+        } while (changeNecessary > 0 && !thereIsNotCoin(50));
+    }
+    return changeNecessary;
+}
+
+function thereIsNotCoin(changeNecessary) {
+    return getIndexAtPocketMoney(changeNecessary) === -1;
 }
 
 function removeFromPocket(changeNecessary, bill) {
-    if (changeNecessary >= bill && pocket.some(_bill => _bill == bill)) {
-        let indexRemove = pocket.findIndex(_bill => _bill == bill);
+    if (changeNecessary >= bill) {
+        let indexRemove = getIndexAtPocketMoney(bill);
         changeNecessary -= bill;
         pocket.splice(indexRemove, 1);
     }
     return changeNecessary;
+}
+
+function getIndexAtPocketMoney(bill) {
+    return pocket.findIndex(_bill => _bill == bill);
 }
